@@ -3,7 +3,7 @@ export const carrega = () => {
         fetch(`http://localhost:3001/tweets?X-AUTH-TOKEN=${localStorage.getItem('TOKEN')}`,) 
         .then(respostaDoServidor => respostaDoServidor.json())
         .then((tweetsDoServidor) => {
-            console.log(tweetsDoServidor)
+            //console.log(tweetsDoServidor)
             dispatch({ type: 'CARREGA_TWEETS', tweets: tweetsDoServidor })
             // this.setState ({
             //     tweets
@@ -26,5 +26,15 @@ export const remove = (idDoTweet) => {
             //     tweets: listaDeTweetsAtualizada
             // })
         })
+    }
+}
+
+export const like = (idDoTweet) => {
+    return (dispatch) => {
+        dispatch({ type: 'LIKE', idDoTweet })
+        dispatch({ type:  'ADD_NOTIFICACAO', msg: 'Você deu like' })
+        setTimeout(() => {
+            dispatch({ type: 'REMOVE_NOTIFICACAO' })
+        }, 5000)
     }
 }

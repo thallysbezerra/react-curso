@@ -4,7 +4,7 @@ import NavMenu from '../../components/NavMenu'
 import Dashboard from '../../components/Dashboard'
 import Widget from '../../components/Widget'
 import TrendsArea from '../../components/TrendsArea'
-import Tweet from '../../components/Tweet'
+import Tweet from '../../containers/TweetPadrao'
 import Modal from '../../components/Modal'
 import PropTypes from 'prop-types'
 import * as TweetsAPI from '../../apis/TweetsAPI'
@@ -27,15 +27,16 @@ class Home extends Component {
 
     componentWillMount() {
         this.context.store.subscribe(() => {
-            console.log('Roda sempre que tiver um dispatch')
+            //console.log('Roda sempre que tiver um dispatch')
             this.setState({
-                tweets: this.context.store.getState()
+                tweets: this.context.store.getState().tweets.lista,
+                tweetAtivo: this.context.store.getState().tweets.tweetAtivo
             })
         })
     }
 
     componentDidMount() {
-        console.log('DidMount', this)
+        //console.log('DidMount', this)
         this.context.store.dispatch(TweetsAPI.carrega())
     }
 
@@ -51,7 +52,7 @@ class Home extends Component {
             })
             .then(respostaDoServidor => respostaDoServidor.json())
             .then((novoTweetRegistradoNoServer) => {
-                console.log(novoTweetRegistradoNoServer)
+                //console.log(novoTweetRegistradoNoServer)
                 this.context
                     .store.dispatch({ type: 'ADICIONA_TWEET', tweet: novoTweetRegistradoNoServer })
                 
@@ -65,28 +66,30 @@ class Home extends Component {
 
     removeTweet(idTweetQueVaiSerRemovido) {
         this.context.store.dispatch(TweetsAPI.remove(idTweetQueVaiSerRemovido))
-    }
-    
-    abreModalParaTweet = (event, IDtweetSelecionado) => {
-        const isTweetFooter = event.target.closest('.tweet__footer')
-        
-        if(isTweetFooter) return false
-
-        const tweetSelecionado = this.state.tweets.find( tweet => tweet._id === IDtweetSelecionado )
 
         this.setState({
-            tweetAtivo: tweetSelecionado // Devemos passar um objeto vazio
+            tweetAtivo: {}
         })
+    }
+    
+    abreModalParaTweet = (event, idDoTweetQueVaiNoModal) => {
+        //console.log('idDoTweetQueVaiNoModal', idDoTweetQueVaiNoModal )
+        //Fazer alguma operação no array de tweets
+        const ignoraModal = event.target.closest('.ignoraModal')
+        if(!ignoraModal) {
+            this.context.store.dispatch({ type: 'ADD_TWEET_ATIVO', idDoTweetQueVaiNoModal })
+        }
     }
 
     fechaModal = (event) => {
         const isModal = event.target.classList.contains('modal')
         if(isModal) {
-          this.setState({
-            tweetAtivo: {}
-          })
+            this.context.store.dispatch({ type: 'REMOVE_TWEET_ATIVO' })
+            //   this.setState({
+            //     tweetAtivo: {}
+            //   })
         }
-      }
+    }
 
     render() {
         return (
@@ -146,12 +149,18 @@ class Home extends Component {
                 <Modal fechaModal={this.fechaModal} isAberto={!!this.state.tweetAtivo._id}>
                     <Widget>
                         <Tweet 
-                            removeHandler={() => this.removeTweet(this.state.tweetAtivo._id)}
                             texto={this.state.tweetAtivo.conteudo || ''}
                             tweetInModal={true}
                             tweetInfo={this.state.tweetAtivo} />
                     </Widget>
                 </Modal>
+
+                {
+                    this.context.store.getState().notificacao &&
+                    <div className="notificacaoMsg">
+                        { this.context.store.getState().notificacao }
+                    </div>
+                }
             </Fragment>
         );
     }
